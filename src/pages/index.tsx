@@ -47,7 +47,7 @@ export default function Home() {
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   return {
     props: {
-      ...(await serverSideTranslations(ctx.locale ?? 'en', ['common'])),
+      ...(await serverSideTranslations(ctx.locale ?? 'default', ['common'])),
     },
   };
 };
