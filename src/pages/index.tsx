@@ -4,6 +4,7 @@ import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
+import LanguageDetector from 'i18next-browser-languagedetector';
 
 export default function Home() {
   const router = useRouter();
@@ -30,6 +31,25 @@ export default function Home() {
               <Link href="/redirect/destination">Link to `Redirect Destination`</Link>
             </div>
             <div>
+              <button
+                onClick={() => {
+                  document.cookie = `NEXT_LOCALE=en;path=/`;
+                  window.location.reload();
+                }}
+              >
+                Cookie Change 'en'
+              </button>
+              <button
+                onClick={() => {
+                  document.cookie = `NEXT_LOCALE=ko;path=/`;
+                  window.location.reload();
+                }}
+              >
+                Cookie Change 'ko'
+              </button>
+              <Link href="/" locale={false}>
+                'false'
+              </Link>
               <Link href={'/'} locale="en">
                 'en' {t('switch')}
               </Link>
@@ -45,9 +65,28 @@ export default function Home() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const getCookie = () => {
+    const cookies = ctx.req.headers.cookie;
+    if (cookies) {
+      const cookie = cookies
+        .split(';')
+        .find((cookie) => cookie.trim().startsWith('NEXT_LOCALE='));
+      if (cookie) {
+        return cookie.split('=')[1];
+      }
+    }
+  };
+  const getLocale = () => {
+    const locale = ctx.req.headers['accept-language']?.split(',')?.[0];
+    if (locale === '*') return;
+    else return locale;
+  };
+
+  const locale = getCookie() || getLocale() || ctx.locale || 'ko';
+
   return {
     props: {
-      ...(await serverSideTranslations(ctx.locale ?? 'default', ['common'])),
+      ...(await serverSideTranslations(locale, ['common'])),
     },
   };
 };
